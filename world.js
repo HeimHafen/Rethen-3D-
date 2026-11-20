@@ -58,9 +58,10 @@ function surface(color, variation = 0, repeat = 1) {
 }
 const grass = surface('#6d8257', 34, 90)
 const asphalt = surface('#687176', 35)
+const redPaverEdge = surface('#a6756d', 18, 8)
 asphalt.bumpMap = asphalt.map
 asphalt.bumpScale = 0.008
-const paving = surface('#b99b87')
+const paving = surface('#c5aaa0')
 const pavingSize = 256
 const pavingPixels = new Uint8Array(pavingSize * pavingSize * 4)
 for (let y = 0; y < pavingSize; y++) {
@@ -251,6 +252,11 @@ strip(pavingEdge, -3.30, -3.265, 0.126)
 const eastSide = points.slice(east)
 const westSide = points.slice(0,west+1)
 for(const segment of [westSide,eastSide]) strip(pavingEdge, 3.265, 3.30, 0.126, 0.126, segment)
+// IMG_2940–2949: red herringbone edge courses alongside both public sidewalks.
+strip(redPaverEdge, -3.72, -3.42, 0.129)
+for(const section of [westSide,eastSide]) strip(redPaverEdge, 3.42, 3.72, 0.129, 0.129, section)
+for(const side of [-1,1]) strip(redPaverEdge, side<0?-3.36:3.02, side<0?-3.02:3.36, 0.129, 0.129, junction)
+
 
 const obstacles = []
 function house(x, z, width, depth, height, type, angle, front) {
@@ -314,7 +320,7 @@ const crown = new THREE.SphereGeometry(1, 11, 9)
 }
 const trunk = new THREE.CylinderGeometry(0.105, 0.21, 3.4, 8)
 for (const [x,z] of [[-33,-17],[-31,-21],[-23,-27],[-16,-34],[-8,-28],
-  [36,-21],[56,-17],[68,-16],[-58,24],[-14,24],
+  [36,-21],[56,-17],[68,-16],[-14,24],
   [18,25],[21,21],[24,24],[26,15],[30,18],[46,18],[59,22],[80,22],[-79,17],[94,24],[-81,-7]]) {
   mesh(scene, trunk, bark, x, 1.56, z)
   for (let i = 0; i < 13; i++) {
@@ -393,7 +399,7 @@ const kioskWood = surface('#332a23', 30, 5)
 kioskWood.bumpMap = kioskWood.map
 kioskWood.bumpScale = 0.016
 const tileMaterial = new THREE.MeshStandardMaterial({
-  color: '#302c29', roughness: 0.70, side: THREE.DoubleSide, vertexColors: true
+  color: '#62584e', roughness: 0.83, side: THREE.DoubleSide, vertexColors: true
 })
 solid(kiosk, kioskPlaster, 0, 0, 0, 12.2, 3.38, 7.6)
 
@@ -446,15 +452,7 @@ patch(paving, [
   new THREE.Vector2(-55.9, 17.25),
 ], 0.12)
 const faceZ = 3.94
-for (const [x,h] of [[-4.02,5.3],[-3.14,6.18],[-2.08,7.27],[-1.19,7.27],[-0.15,6.16],[0.73,5.3]]) {
-  beam(kiosk, kioskWood, x, 3.11, x, h, faceZ, 0.115)
-}
-for (const [y,a,b] of [[3.1,-4.04,0.74],[5.32,-4.04,0.74],[6.25,-3.13,-0.17],[4.38,-4.04,-3.1],[4.38,-2.1,-1.17],[4.38,0.0,0.73]]) {
-  beam(kiosk,timber,a,y,b,y,faceZ,0.12)
-}
-beam(kiosk,kioskWood,-4.02,5.28,-3.5,3.13,faceZ,0.105)
-beam(kiosk,kioskWood,0.72,5.28,0.19,3.13,faceZ,0.105)
-pane(kiosk,-0.65,4.24,faceZ,0.73,1.02,garageDoor)
+// Photographed white plaster front: incorrect ornamental dark timber removed.
 pane(kiosk,-1.65,7.04,faceZ,0.40,0.53)
 const signInk = surface('#202733')
 const signFace = surface('#d9ceac')
@@ -466,6 +464,16 @@ box(kiosk, slate, 5.52, 3.31, 3.28, 2.97, 0.20, 2.92)
 box(kiosk, shutter, 6.934, 1.27, 3.15, 0.055, 2.38, 1.91)
 for (let col=0; col<19; col++) box(kiosk, timber, 6.97, 1.27, 2.23+col*0.103, 0.02, 2.37, 0.035)
 
+// IMG_2940 / IMG_2944: broad pale metal security rolling gate on kiosk facade.
+const gateMetal=surface('#bfc4c0',10)
+const gateSlats=surface('#858b89')
+box(kiosk,frames,-3.53,1.30,4.018,3.45,2.49,0.11)
+box(kiosk,gateMetal,-3.53,1.30,4.077,3.34,2.41,0.04)
+for(let n=0;n<31;n++) box(kiosk,gateSlats,-5.14+n*0.107,1.30,4.105,0.014,2.37,0.015)
+box(kiosk,gateSlats,-3.53,1.30,4.119,0.027,2.35,0.017)
+box(kiosk,gateSlats,-3.53,0.22,4.116,3.34,0.025,0.017)
+box(kiosk,gateSlats,-3.53,2.45,4.116,3.34,0.025,0.017)
+// Existing tiny inset door remains behind the gate as an earlier fallback.
 box(kiosk,frames,-1.61,1.16,3.85,1.18,2.23,0.12)
 box(kiosk,cream,-1.61,1.18,3.928,0.97,2.07,0.067)
 for (const y of [0.58,0.91,1.23,1.55,1.89]) {
@@ -540,6 +548,21 @@ function shopSign(x,y,z,angle,scale,background) {
     }
   }
 }
+// Solid timber gallery and large street-facing sign; all live WebGL geometry.
+const balconyWood=[surface('#413733',15),surface('#54453e',19),surface('#493c37',18)]
+box(kiosk,kioskWood,-1.0,3.51,4.30,10.0,0.14,1.02)
+for(let n=0;n<58;n++) box(kiosk,balconyWood[n%3],-5.75+n*0.165,4.04,4.78,0.158,1.17,0.072)
+box(kiosk,kioskWood,-1.0,4.65,4.82,10.0,0.085,0.12)
+const signCanvas=document.createElement('canvas')
+signCanvas.width=1024; signCanvas.height=256
+const ctx=signCanvas.getContext('2d')
+ctx.fillStyle='#f6f5ef';ctx.fillRect(0,0,1024,256)
+ctx.fillStyle='#2c2e66';ctx.font='bold 205px Arial,sans-serif'
+ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('KIOSK',512,141)
+const kioskSignTexture=new THREE.CanvasTexture(signCanvas)
+kioskSignTexture.colorSpace=THREE.SRGBColorSpace
+box(kiosk,new THREE.MeshStandardMaterial({map:kioskSignTexture,roughness:0.87}),-3.17,4.05,4.844,4.2,0.89,0.04)
+box(kiosk,signFace,-0.17,4.05,4.847,0.75,0.89,0.03)
 shopSign(5.59,3.65,4.68,0,1,signFace)
 shopSign(6.99,3.65,3.31,Math.PI/2,0.96,signFace)
 shopSign(5.85,2.95,4.78,0,0.47,shopLight)
@@ -871,14 +894,45 @@ const greenGate = surface('#385549', 23)
 const brickOutbuilding = frontage(-65, -2.6, 1, 0.10)
 solid(brickOutbuilding, brick, 0, 0, 0, 7.1, 2.6, 5.8)
 gable(brickOutbuilding, brick, slate, 0, 0, 7.1, 5.8, 2.6, 2.12)
-for (const [x, width, height] of [[-1.12, 2.70, 2.34], [1.86, 1.33, 1.84]]) {
-  box(brickOutbuilding, greenGate, x, height / 2, 2.95, width, height, 0.10)
-  for (let offset = -width / 2 + 0.1; offset < width / 2; offset += 0.16) {
-    box(brickOutbuilding, timber, x + offset, height / 2, 3.005, 0.014, height - 0.05, 0.012)
-  }
+// IMG_2949: large green round-arched gate, two small green access doors.
+const photoBrick = surface('#855248',30)
+const mainArchX=-1.13, mainArchR=1.38
+box(brickOutbuilding,greenGate,mainArchX,1.14,2.952,mainArchR*2,2.28,0.11)
+const archPoints=[]
+for(let j=0;j<=32;j++) {
+ const t=j*Math.PI/32
+ archPoints.push([mainArchX+mainArchR*Math.cos(t),2.28+mainArchR*Math.sin(t)])
+}
+const archPoly=[]
+for(let j=0;j<32;j++) archPoly.push(mainArchX,2.28,3.018,...archPoints[j],3.018,...archPoints[j+1],3.018)
+const archGeom=new THREE.BufferGeometry()
+archGeom.setAttribute('position',new THREE.Float32BufferAttribute(archPoly,3))
+archGeom.computeVertexNormals()
+mesh(brickOutbuilding,archGeom,greenGate,0,0,0)
+for(let j=0;j<=20;j++) {
+ const t=j*Math.PI/20
+ const x=mainArchX+(mainArchR+0.075)*Math.cos(t)
+ const y=2.28+(mainArchR+0.075)*Math.sin(t)
+ const v=box(brickOutbuilding,photoBrick,x,y,3.050,0.225,0.13,0.14)
+ v.rotation.z=t-Math.PI/2
+}
+for(let j=0;j<18;j++) box(brickOutbuilding,timber,mainArchX-1.29+j*0.15,1.15,3.024,0.012,2.24,0.014)
+for(const [x,w,h] of [[1.28,0.81,1.26],[2.36,0.78,1.26]]) {
+ box(brickOutbuilding,greenGate,x,h/2,2.97,w,h,0.11)
+ for(let j=0;j<5;j++) box(brickOutbuilding,timber,x-w/2+0.08+j*0.15,h/2,3.031,0.014,h-0.06,0.015)
+ box(brickOutbuilding,photoBrick,x,h+0.075,2.995,w+0.16,0.15,0.15)
 }
 pavedArea(brickOutbuilding, 0, 4.03, 7.2, 2.27)
-solid(brickOutbuilding, curb, -2.38, 0, 5.2, 2.7, 0.76, 0.22)
+// Low weathered concrete frontage wall (IMG_2949), no solid pale barrier.
+const lowConcrete=surface('#82847d',26)
+for(const [x,w] of [[-2.50,1.76],[2.42,1.64]]) {
+  solid(brickOutbuilding,lowConcrete,x,0,5.14,w,0.73,0.23)
+  box(brickOutbuilding,curb,x,0.79,5.14,w+0.08,0.09,0.27)
+}
+for(const x of [-3.44,-1.54,1.54,3.34]) {
+  box(brickOutbuilding,lowConcrete,x,0.45,5.12,0.26,0.90,0.34)
+  box(brickOutbuilding,curb,x,0.92,5.12,0.31,0.075,0.37)
+}
 
 const terracotta = surface('#965645', 36, 4)
 const yellowPlaster = surface('#bba477', 22)
@@ -925,8 +979,15 @@ for (const [x,z,side] of [[-66,17,1],[-47,15.7,1],[-24,11.8,1],[14,-8,-1],[14,-2
   nightLamp(scene,x,4.72,z-side*0.81,'#ffb14c',145,20)
 }
 const cover = new THREE.CylinderGeometry(0.32,0.32,0.023,28)
-for (const [x,z] of [[-51,8.6],[-48.4,9.6],[-20,4.75],[14,0.9],[26,1.23]]) {
-  mesh(scene,cover,slate,x,0.008,z,false)
+const ironRing=surface('#484848',18), insetLid=surface('#77746d',19)
+for(const [x,z] of [[-51,8.6],[-48.4,9.6],[-20,4.75],[14,0.9],[26,1.23],[-62.3,8.3]]) {
+ mesh(scene,cover,ironRing,x,0.012,z,false)
+ mesh(scene,new THREE.CylinderGeometry(0.252,0.252,0.021,28),insetLid,x,0.029,z,false)
+}
+const drainCover=surface('#373c3b')
+for(const [x,z] of [[-60.8,10.2],[-56.7,9.1]]) {
+ box(scene,drainCover,x,0.013,z,0.48,0.026,0.28,false)
+ for(let j=0;j<6;j++) box(scene,curb,x-0.17+j*0.068,0.034,z,0.016,0.01,0.26,false)
 }
 
 // The second pin is across the road, slightly east of the first house.
@@ -1149,7 +1210,7 @@ await new GLTFLoader().loadAsync('./assets/models/Haus-Aussenmodell.glb').then((
   })
   anchor.add(model)
   obstacles.push({ group: anchor, minX: 0, maxX: 23.72, minZ: -7.8, maxZ: 0.12 })
-  status.textContent = 'V21 · Referenzabgleich · 200 m'
+  status.textContent = 'V22 · Fotoabgleich · 200 m'
   document.body.dataset.ready = 'true'
 }).catch(error => {
   console.error(error)
