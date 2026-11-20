@@ -1,4 +1,4 @@
-# Rethen · Peiner Straße · V20 Gesamtpaket
+# Rethen · Peiner Straße · V21 Referenzabgleich
 
 **Ein zusammenhängender 3D-Rundgang** durch den bisher erstellten Abschnitt der Peiner Straße in Rethen (Laatzen). Grundlage ist das originale **V19-Projekt**, das vollständig übernommen wurde. Die bisherigen Architekturmodelle, Straßen, Gehwege, Nachtbeleuchtung und Korrekturen bleiben erhalten.
 
@@ -17,7 +17,7 @@
 
 Alle Bereiche liegen **in einer einzigen 3D-Szene** und können zu Fuß erreicht werden. Es werden keine separaten Levels geladen.
 
-## Neu in V20
+## Verbesserungen aus V20 und V21
 
 - Gemeinsame, übersichtliche **Bereichsauswahl** mit zwölf Ansichten für die bereits vorhandenen Modelle; Kamerawechsel bleiben innerhalb derselben Welt.
 - Aufgeräumte, fingerfreundliche Bedienoberfläche für iPhone (Hoch- und Querformat), inklusive Safe-Area-Abständen.
@@ -25,6 +25,32 @@ Alle Bereiche liegen **in einer einzigen 3D-Szene** und können zu Fuß erreicht
 - Korrektur einer überlappenden Asphaltfläche an der Einmündung: minimaler Höhenversatz zur Verringerung von Flimmern.
 - Zuverlässigeres Loslassen der Bewegungssteuerung bei unterbrochenem Touch und beim Wechsel aus dem Browser.
 - Quellcode, lokales Three.js, das GLB-Haus und alle erforderlichen Dateien im Paket, **ohne CDN**.
+
+## NEU in V21: Foto-/Videoabgleich
+
+Der Benutzer hat sechs Live-Screenshots der V20-Szene sowie sieben Straßenansicht-Videos
+(19./20. November 2026) bereitgestellt. V21 verbessert gezielt die wichtigsten
+beobachtbaren Abweichungen, ohne die bestehende Szene oder das Modell von Haus 9B zu ersetzen.
+
+- **Haus 8**: Die in V20 nicht passende rote Mauer mit den übergroßen Kugelhecken wurde entfernt.
+  Stattdessen gibt es einen verwitterten Holzzaun mit durchlässigem Kreuzgitter unten und
+  waagerechten Brettern oben. Pflanzen stehen niedriger und weiter hinter dem Zaun.
+- **Haus 8, Material**: hellgrau verwitterte Fassadenverkleidung, blau gestrichener Eingangsvorbau,
+  abgedunkelte Dachziegeltextur, Dachrinne und Fallrohr. Die genaue Dimensionierung bleibt annähernd.
+- **Haus 7**: Garagenfront an die im Video sichtbare Anordnung mit zwei Toren links,
+  einem Tor rechts und einem zentralen Treppenaufgang angenähert; dunklere Garagentore,
+  weniger auffällige Rahmen sowie ziegelartig strukturierte Dachoberflächen.
+- **Vegetation**: Unregelmäßigere, kleinere Baumkronen- und Buschformen anstelle
+  besonders grober gleichförmiger Kugelkonturen.
+- **Straßenraum**: Asphaltfeinkörnung reduziert; schmale, helle Pflasterabschlüsse ergänzt.
+  Die vorgegebenen Grundfarben (graublau/beige) bleiben bestehen.
+- **iPhone**: Kopfzeile und Standortauswahl auf volle Breite zusammengeführt; Bedienelemente
+  kompakter; Kamerapositionen für Haus 8, Haus 7 und Kiosk so angepasst, dass mehr
+  vom zugehörigen Bereich sichtbar ist.
+
+**Bewusst nicht als 1:1 verifiziert**: Straßenmittelachse, Gebäudeabstände, rückwärtige
+Gebäudeseiten, Dächer ohne passende Detailaufnahme, Vermessung, exakte Materialfarbwerte
+und Nebengebäude. Einige Gebäude sind weiterhin vereinfachte Platzhalter.
 
 ## Installation auf GitHub Pages
 
@@ -45,10 +71,10 @@ Lokal: im Ordner `python3 -m http.server 8000` starten, dann `http://localhost:8
 
 ## Präzision und Grenzen
 
-Die bisherige Straßenachse wurde aus einer bereitgestellten Luftaufnahme angenähert; Fassaden/Grundstücke stammen teils aus Nutzerfotos, teils aus generischer Platzhalterbebauung. **Dies ist keine vermessene, zentimetergenaue Rekonstruktion Rethens.** Positionen, Höhen, Dachformen und rückwärtige Seiten ohne ausreichendes Referenzmaterial bleiben geschätzt. V20 konsolidiert den vorhandenen Entwicklungsstand, ohne eine 1:1-Übereinstimmung vorzutäuschen.
+Die bisherige Straßenachse wurde aus einer bereitgestellten Luftaufnahme angenähert; Fassaden/Grundstücke stammen teils aus Nutzerfotos, teils aus generischer Platzhalterbebauung. **Dies ist keine vermessene, zentimetergenaue Rekonstruktion Rethens.** Positionen, Höhen, Dachformen und rückwärtige Seiten ohne ausreichendes Referenzmaterial bleiben geschätzt. V21 konsolidiert und überarbeitet konkrete, in den sieben Straßenansicht-Videos erkennbare Details des vorhandenen Entwicklungsstands, ohne eine 1:1-Übereinstimmung vorzutäuschen.
 
 ## Prüfung
 
-Prüfung des Paketaufbaus, der Javascript-Syntax, der referenzierten Dateipfade, des GLB-Headers und der Navigationselemente. Ein vollständiger interaktiver Grafik-/Safari-Test auf einem realen iPhone kann nicht allein durch diese statischen Kontrollen ersetzt werden.
+Prüfung des Paketaufbaus, der Javascript-Syntax, der referenzierten Dateipfade, des GLB-Headers und der Navigationselemente. Zusätzlich unter Chromium/Linux in einem echten WebGL-Kontext getestet (390 × 844 px): alle zwölf Kamerabereiche, Tag/Nacht, Original-GLB sowie die Steueroberfläche; keine JavaScript-/Konsolenfehler. Ein Safari-Test auf einem realen iPhone bleibt ausstehend.
 
-Quelle: `Rethen-Peiner-Strasse-V19.zip` (Originalstand, 19.11.2026). Darauf aufbauend V20.
+Quellenbasis: `Rethen-Peiner-Strasse-V19.zip`, danach V20; sieben Videoreferenzen plus sechs Live-Screenshots vom 19.–20.11.2026. V21 baut direkt auf V20 auf.

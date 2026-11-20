@@ -1,24 +1,52 @@
-RETHEN – V20 GESAMTPAKET | PRÜFBERICHT
+RETHEN – V21 REFERENZABGLEICH | PRUEFBERICHT (20.11.2026)
 
 BASIS
-- Originalprojekt Rethen-Peiner-Strasse-V19.zip
-- Bisherige Gebäudemodelle, Straßen und GLB übernommen
-- V19-Korrekturen an Haus 7 unverändert
+- Ausgangspunkt: unveraendertes V20-Gesamtpaket mit Original-GLB-Haus 9B
+- Weiterhin eine gemeinsame Three.js-Welt (kein Szenenwechsel)
+- 12 Bereichsansichten / auf GitHub Pages nutzbare lokale Assets
 
-ZUSAMMENFÜHRUNG
-- Ein index.html / ein world.js / eine gemeinsame Three.js-Szene
-- Zwölf Ansichten über Bereichsauswahl
-- Gleiche Welt, keine separaten Szenen oder Duplikate
-- Keine neu erfundenen Gebäude und keine Verschiebung der früheren Bauwerke
+AUSGEWERTETE REFERENZVIDEOS
+1. 11-19 23-56-01, ca. 49 s: Kiosk/Fachwerkgiebel, Bachstrasse,
+   weisse Giebelhaeuser, Haus 7 / Garagenbereich, Einfriedung
+2. 11-20 00-06-42, ca. 39 s: beige Wohnhaeuser, Tor-/Zaunanlagen,
+   weisses Einfamilienhaus mit schmiedeeisernem Zaun, Klinkerhaus
+3. 11-20 00-08-25, ca. 38 s: Haus 8 mit blauem Eingangsvorbau,
+   grauer Verkleidung, Vorgarten; moderne Garagen und Gehweg
+4. 11-20 00-10-32, ca. 30 s: Backstein-Nebengebaeude mit gruenen
+   Toren, enge Seitenstrasse, Kiosk, Einmuendung
+5. 11-20 00-12-44, ca. 33 s: Tor-/Gittereinfriedungen,
+   weisses Haus, rote und gelbe Klinkerfassaden, Gehweg
+6. 11-20 00-14-25, ca. 35 s: rote und gelbe Wohnhaeuser,
+   Vorgartenzaeune, Hecken, Seitenstrassenperspektiven
+7. 11-20 00-37-10, ca. 40 s: Haus 8 mit altem Holzzaun,
+   Kiosk/Fachwerkgiebel, moderne Haus-7-Fassade mit drei
+   Garagentoren und mittigem Aufgang
+Zusaetzlich sechs reale V20-Livebilder (IMG_2931 bis IMG_2936).
 
-GEPRÜFT
-- Vollständigkeit der Archivdateien und relativen Pfade
-- JavaScript-Syntax
-- GLB-Dateikopf und Dateigröße
-- Bedienoberfläche und definierte Bereichsnamen
-- Keine externe CDN-Abhängigkeit
+IN V21 KONKRET GEANDERT
+- Haus 8: rote Mauer/aufgesetzte Kugelhecke aus V20 beseitigt;
+  Holzbrett-Zaun + offene diagonale Untergitterung umgesetzt.
+- Haus 8: abweichende Materialfarben/Materialoberflaechen korrigiert;
+  kleinerer Bewuchs hinter Zaun, Dachrinne/Fallrohr.
+- Haus 7: Garagenanordnung in Anlehnung an die Referenz (2 links,
+  1 rechts), matte dunkle Tore und Rahmen; Dachziegelstruktur.
+- Baumkronen verkleinert und durch variierende Formen gegliedert.
+- Asphalt-/Gehweg-Oberflaechen differenziert, Farben erhalten.
+- Mobile Kopfleiste passt kompakt untereinander, keine Ueberlappung.
+- Sichtachsen der Bereichsauswahl Haus 7, Haus 8, Kiosk korrigiert.
 
-NOCH OFFEN
-- Live-Sichtprüfung mit iPhone/Safari und GitHub Pages
-- Vermessung der realen Gebäude- und Straßenabstände
-- Detaillierter Abgleich weiterer Fassaden mit den jeweiligen Fotos
+TECHNISCHE PRUEFUNG
+- node --check world.js: bestanden
+- Chromium/Xvfb: WebGL-Szene laedt, Original-GLB erfolgreich
+- 12 Bereichsansichten im Browser getestet
+- Wechsel Tag/Nacht im Browser getestet
+- iPhone-Viewport 390 x 844 px, Kopfzeile ohne Ueberlappung
+- Keine JavaScript- oder Konsolenfehler im Test
+- Archivstruktur/Verweise/ZIP geprueft
+
+GRENZEN
+- Der visuelle Test erfolgte mit Linux Chromium, nicht iOS Safari.
+- Fotos/Street-View-Videos geben keine exakten Messkoordinaten her.
+- Nicht jede Fassaden-, Garten- und Dachseite ist 1:1 rekonstruiert.
+- Das Projekt ist ein weiter ausbaufähiger Entwicklungsstand, kein
+  nachgewiesenes fotogrammetrisches Modell von Rethen.

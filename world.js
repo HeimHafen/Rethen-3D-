@@ -9,12 +9,13 @@ try {
   status.textContent = 'WebGL konnte nicht gestartet werden.'
   throw error
 }
-renderer.setPixelRatio(Math.min(devicePixelRatio || 1, 1.5))
+renderer.setPixelRatio(Math.min(devicePixelRatio || 1, matchMedia('(pointer:coarse)').matches ? 1.45 : 1.8))
 renderer.shadowMap.enabled = true
 renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.shadowMap.autoUpdate = false
 renderer.shadowMap.needsUpdate = true
 renderer.toneMapping = THREE.ACESFilmicToneMapping
+renderer.toneMappingExposure = 1.04
 document.body.prepend(renderer.domElement)
 
 const scene = new THREE.Scene()
@@ -55,11 +56,11 @@ function surface(color, variation = 0, repeat = 1) {
   material.map = map
   return material
 }
-const grass = surface('#687c49', 85, 90)
-const asphalt = surface('#666567', 76)
+const grass = surface('#6d8257', 34, 90)
+const asphalt = surface('#687176', 35)
 asphalt.bumpMap = asphalt.map
-asphalt.bumpScale = 0.021
-const paving = surface('#ad8e78')
+asphalt.bumpScale = 0.008
+const paving = surface('#b99b87')
 const pavingSize = 256
 const pavingPixels = new Uint8Array(pavingSize * pavingSize * 4)
 for (let y = 0; y < pavingSize; y++) {
@@ -92,6 +93,41 @@ const glass = surface('#34444b')
 const bark = surface('#564438')
 const leaves = ['#536736', '#60743d', '#6b7f48'].map(color => surface(color))
 const walls = ['#bfb7a0', '#d3c9b4', '#a58069', '#c8b7a0'].map(color => surface(color))
+// Procedural ceramic roof tiles: staggered courses, subdued grout and individually varying tiles.
+// This is a real texture within the 3D scene, not a wallpaper added to screenshots.
+function roofCeramics(color, repeatX = 3.2, repeatY = 2.1) {
+  const mat = new THREE.MeshStandardMaterial({ color, roughness: 0.88, metalness: 0.0 })
+  const n = 256, data = new Uint8Array(n*n*4)
+  for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+    const course = Math.floor(y/16)
+    const offset = (course % 2) * 16
+    const col = Math.floor((x+offset)/32)
+    const sx = (x+offset)%32
+    const sy = y%16
+    const bevel = Math.min(sx,31-sx,sy,15-sy)
+    const seam = bevel === 0
+    const variation = ((col*37+course*19+col*course*7)%21)-10
+    const grain = ((x*43+y*71+(x*y)%17)%13)-6
+    const shade = seam ? 130 : Math.max(140,Math.min(254,215+variation+grain + (bevel === 1 ? -16 : 0)))
+    const at=(y*n+x)*4
+    data.set([shade,shade,shade,255],at)
+  }
+  const tex = new THREE.DataTexture(data,n,n)
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping
+  tex.repeat.set(repeatX,repeatY)
+  tex.magFilter=THREE.LinearFilter
+  tex.minFilter=THREE.LinearMipmapLinearFilter
+  tex.generateMipmaps=true
+  tex.anisotropy=4
+  tex.needsUpdate=true
+  mat.map=tex
+  mat.bumpMap=tex
+  mat.bumpScale=0.016
+  return mat
+}
+const roofEight = roofCeramics('#474541', 2.2, 2.7)
+const roofGarage = roofCeramics('#414244', 3.8, 1.4)
+roofGarage.side = THREE.DoubleSide
 const roofs = ['#514d49', '#704439', '#8b5743'].map(color => surface(color))
 const unitBox = new THREE.BoxGeometry()
 function mesh(parent, geometry, material, x, y, z, shadow = true) {
@@ -208,6 +244,14 @@ for (const side of [-1, 1]) {
   strip(curb, side * 2.75, side * 2.75, 0, 0.12, junction)
 }
 
+// The photographed sidewalks use individual paving courses with a pale curb.
+// Narrow edge strips reduce the overly uniform appearance at the road edge.
+const pavingEdge = surface('#c6b9a6', 20)
+strip(pavingEdge, -3.30, -3.265, 0.126)
+const eastSide = points.slice(east)
+const westSide = points.slice(0,west+1)
+for(const segment of [westSide,eastSide]) strip(pavingEdge, 3.265, 3.30, 0.126, 0.126, segment)
+
 const obstacles = []
 function house(x, z, width, depth, height, type, angle, front) {
   const group = new THREE.Group()
@@ -257,17 +301,30 @@ const neighbours = [
 ]
 for (const [x,z,w,d,h,type,angle] of neighbours) house(x,z,w,d,h,type,angle,z < 0 ? 1 : -1)
 
-const crown = new THREE.IcosahedronGeometry(1, 2)
+const crown = new THREE.SphereGeometry(1, 11, 9)
+// Distort the vertices to break the recognizable identical-sphere silhouette.
+{
+  const attribute = crown.attributes.position
+  for (let i=0;i<attribute.count;i++) {
+    const x=attribute.getX(i), y=attribute.getY(i), z=attribute.getZ(i)
+    const deformation=1+0.10*Math.sin(x*6.1+y*3.8)+0.08*Math.cos(z*7.7+x*5.3)
+    attribute.setXYZ(i,x*deformation,y*deformation,z*deformation)
+  }
+  crown.computeVertexNormals()
+}
 const trunk = new THREE.CylinderGeometry(0.105, 0.21, 3.4, 8)
 for (const [x,z] of [[-33,-17],[-31,-21],[-23,-27],[-16,-34],[-8,-28],
   [36,-21],[56,-17],[68,-16],[-58,24],[-14,24],
   [18,25],[21,21],[24,24],[26,15],[30,18],[46,18],[59,22],[80,22],[-79,17],[94,24],[-81,-7]]) {
   mesh(scene, trunk, bark, x, 1.56, z)
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 13; i++) {
+    const phi = random()*Math.PI*2
+    const radius = (i<4 ? 0.38 : 1.25) + random()*0.53
     const ball = mesh(scene, crown, leaves[i % 3],
-      x + (random() - 0.5) * 3.1, 3.2 + random() * 2.2, z + (random() - 0.5) * 3.1)
-    ball.scale.set(1.35 + random(), 1.5 + random(), 1.25 + random())
-    ball.rotation.y = random() * Math.PI
+      x + Math.cos(phi)*radius, 4.0 + random()*1.22 + (i<4?0.45:0),
+      z + Math.sin(phi)*radius)
+    ball.scale.set(0.67 + random()*0.48, 0.66 + random()*0.49, 0.64 + random()*0.52)
+    ball.rotation.set(random(),random()*Math.PI,random())
   }
 }
 
@@ -572,21 +629,21 @@ box(kiosk,silver,7.18,2.53,5.68,0.105,5.06,0.105)
 box(kiosk,silver,7.18,5.04,5.42,0.095,0.095,0.57)
 box(kiosk,lightBox,7.18,4.99,5.13,0.24,0.08,0.46)
 
-const blueWood = surface('#587b91', 24)
-const fadedCladding = surface('#a39e90', 24)
+const blueWood = surface('#6d91a5', 20)
+const fadedCladding = surface('#a8adae', 21)
 const porchGlass = surface('#696f6d', 20)
 const eight = frontage(-31, 16.8, -1, -0.12)
 solid(eight,fadedCladding,0,0,0,8.6,4.25,6.9)
 const eightRoofDepth = 7.26
 for (const side of [-1, 1]) {
-  const slope = box(eight,roofs[1],0,5.38,side*eightRoofDepth/4,8.95,0.14,
+  const slope = box(eight,roofEight,0,5.38,side*eightRoofDepth/4,8.95,0.14,
     Math.hypot(eightRoofDepth/2,2.26))
   slope.rotation.x = side*Math.atan2(2.26,eightRoofDepth/2)
 }
-gable(eight,blueWood,roofs[1],1.60,2.1,5.36,2.93,4.25,2.50)
+gable(eight,blueWood,roofEight,1.60,2.1,5.36,2.93,4.25,2.50)
 for (let y=0.18;y<6.75;y+=0.27) {
   const width = y<4.25 ? 8.57 : 5.36*(1-(y-4.25)/2.5)
-  box(eight,y<4.25?garageDoor:slate,y<4.25?0:1.60,y,y<4.25?3.46:3.574,width,0.017,0.024)
+  box(eight,y<4.25?fadedCladding:blueWood,y<4.25?0:1.60,y,y<4.25?3.46:3.574,width,0.018,0.026)
 }
 pane(eight,2.23,3.55,3.50,0.82,0.82)
 solid(eight,blueWood,-0.54,0,4.05,1.88,2.35,1.30)
@@ -606,15 +663,44 @@ porchSide.position.x = 0.407
 porchSide.rotation.y = Math.PI/2
 eight.add(porchSide)
 pane(porchSide,-3.99,1.65,0,0.64,0.80,porchGlass)
-box(eight,brick,6.70,0.71,3.78,4.55,1.42,0.27)
-box(eight,roofs[1],6.70,1.44,3.78,4.61,0.09,0.37)
-const ivy = [surface('#485039'),surface('#5b643e'),surface('#6c7246')]
-for (let i=0;i<34;i++) {
-  const x=4.16+(i%7)*0.72
-  const y=1.44+(i%5)*0.19+(x<5.08?1.10:0)
-  const shrub=mesh(eight,crown,ivy[i%3],x,y,3.78+(i%3-1)*0.28)
-  shrub.scale.set(0.54,0.42,0.48)
+// Reference 00:37:10: timber boundary with horizontal grey planks and
+// diagonal open lattice below. V20's RED BRICK WALL + BALL HEDGE were incorrect.
+const weatheredFence = [surface('#877d6b',21),surface('#9a907d',18),
+  surface('#746e61',14),surface('#aaa092',15)]
+const fenceLineStart=4.21, fenceLineEnd=9.06, fenceDepth=3.78
+for (let panel=0;panel<3;panel++) {
+  const a=fenceLineStart+panel*1.62
+  const b=Math.min(fenceLineEnd,a+1.62)
+  const mid=(a+b)/2, span=b-a
+  box(eight,timber,a,0.84,fenceDepth,0.085,1.68,0.10)
+  box(eight,timber,b,0.84,fenceDepth,0.085,1.68,0.10)
+  // Lower criss-cross lattice, leaving real visible gaps.
+  for(let j=0;j<7;j++) {
+    const x0=a+0.04+j*span/7
+    const x1=x0+span/7
+    beam(eight,weatheredFence[(j+panel)%4],x0,0.10,x1,0.75,fenceDepth,0.048,0.058)
+    beam(eight,weatheredFence[(j+panel+2)%4],x0,0.75,x1,0.10,fenceDepth+0.01,0.048,0.058)
+  }
+  for(let r=0;r<6;r++) {
+    const height=0.84+r*0.139
+    box(eight,weatheredFence[(r+panel)%4],mid,height,fenceDepth,span-0.06,0.121,0.049)
+  }
+  box(eight,weatheredFence[2],mid,1.70,fenceDepth,span,0.037,0.11)
 }
+// Smaller, staggered native-looking shrubs BEHIND the fence, never mounted
+// on top of a brick wall and never protruding into the public sidewalk.
+const ivy = [surface('#3f563c'),surface('#607346'),surface('#778355')]
+for(let i=0;i<34;i++) {
+  const x=4.0+(i%11)*0.45+(random()-0.5)*0.22
+  const z=2.68+(Math.floor(i/11))*0.37+(random()-0.5)*0.16
+  const height=0.77+random()*0.65
+  const shrub=mesh(eight,crown,ivy[i%3],x,1.10+height*0.30,z,false)
+  shrub.scale.set(0.28+random()*0.20,height*0.55,0.29+random()*0.18)
+}
+// Low unobtrusive under-eave gutter and downpipe.
+box(eight,silver,0,4.26,3.51,8.95,0.070,0.074)
+box(eight,silver,-4.30,2.17,3.49,0.067,4.15,0.065)
+obstacles.push({group:eight,minX:fenceLineStart,maxX:fenceLineEnd,minZ:3.70,maxZ:3.84})
 for (let i=0;i<20;i++) {
   const picket=box(eight,timber,-4.1+i*0.16,0.40,4.17,0.059,0.99,0.052)
   picket.rotation.z=i%2===0?0.56:-0.56
@@ -653,11 +739,14 @@ solid(seven,white,0,5.25,-0.42,11.3,2.48,7.5)
 const sevenRoof = new THREE.BufferGeometry()
 sevenRoof.setAttribute('position',new THREE.Float32BufferAttribute([
   -5.95,7.72,-4.44, 5.95,7.72,-4.44, 5.95,7.72,3.6, -5.95,7.72,3.6,
-  -3.28,8.55,-0.42, 3.28,8.55,-0.42,
+  -3.28,9.23,-0.42, 3.28,9.23,-0.42,
 ],3))
-sevenRoof.setIndex([0,5,1,0,4,5,1,5,2,2,4,3,2,5,4,3,4,0])
+sevenRoof.setAttribute('uv',new THREE.Float32BufferAttribute([
+  0,0, 1,0, 1,1, 0,1, 0.22,0.5, 0.78,0.5
+],2))
+sevenRoof.setIndex([0,1,5,0,5,4,3,5,2,3,4,5,0,4,3,1,2,5])
 sevenRoof.computeVertexNormals()
-mesh(seven,sevenRoof,slate,0,0,0)
+mesh(seven,sevenRoof,roofGarage,0,0,0)
 for (const [x,width] of [[-6.3,1.13],[-4.2,0.64],[-2.3,1.30],[0,1.45],
   [2.3,1.30],[4.2,0.64],[6.3,1.30]]) {
   pane(seven,x,4.12,4.35,width,1.32)
@@ -687,41 +776,35 @@ for (const x of [-0.89,0.89]) {
   box(seven,curb,x,1.77,6.58,0.20,0.06,2.93)
 }
 
+const garageGraphite = surface('#414b52', 18)
+const garageFrame = surface('#313b3f', 12)
+const garageJoint = surface('#394247', 8)
 for (const x of [-4.45,4.45]) {
   solid(seven,charcoalClinker,x,0,6.78,6.97,2.28,4.4)
   for (let y=0.08;y<2.28;y+=0.095) box(seven,mortar,x,y,8.984,6.95,0.010,0.016,false)
   for (const side of [-1,1]) {
-    const roof=box(seven,slate,x,2.48,6.78+side*1.14,7.17,0.13,2.40)
+    const roof=box(seven,roofGarage,x,2.48,6.78+side*1.14,7.17,0.13,2.40)
     roof.rotation.x=side*0.15
   }
   box(seven,gutterMetal,x,2.29,9.16,7.18,0.093,0.10)
-  for (const dx of [-1.68,1.68]) {
-    box(seven,frames,x+dx,1.08,9.001,2.98,2.06,0.12)
-    box(seven,garageDoor,x+dx,1.07,9.073,2.86,1.95,0.08)
-    for(let i=1;i<7;i++) box(seven,slate,x+dx,0.12+i*0.277,9.119,2.84,0.013,0.014)
+  const garageBays = x < 0 ? [{dx:-1.68,w:2.98},{dx:1.68,w:2.98}]
+    : [{dx:0,w:4.22}]
+  for (const {dx,w} of garageBays) {
+    box(seven,garageFrame,x+dx,1.08,9.001,w+0.11,2.11,0.12)
+    box(seven,garageGraphite,x+dx,1.07,9.073,w,1.96,0.08)
+    for(let i=1;i<7;i++) box(seven,garageJoint,x+dx,0.12+i*0.277,9.119,w-0.06,0.013,0.014)
   }
 }
 // The open carport extends from the left garage pair.
-const roofCorrugation = surface('#41474b')
-{
-  const center = -9.44
-  box(seven,slate,center,2.43,6.88,3.19,0.15,4.64).rotation.x=0.045
-  box(seven,gutterMetal,center,2.35,9.21,3.17,0.09,0.10)
-  for (const z of [4.74,9.04]) {
-    box(seven,timber,Math.sign(center)*10.94,1.17,z,0.135,2.34,0.135)
-  }
-  box(seven,garageDoor,center,-0.087,6.91,3.15,0.17,4.53,false)
-  box(seven,white,center,1.16,4.70,3.08,2.32,0.12)
-}
-for (const [center,width] of [[-9.44,3.16],[-4.45,7.12],[4.45,7.12]]) {
-  const isGarage = width > 4
-  const tilt = isGarage ? 0.15 : 0.045
-  const height = isGarage ? 2.55 : 2.47
-  for (let dx=-width/2+0.12;dx<width/2;dx+=0.24) {
-    const rib=box(seven,roofCorrugation,center+dx,height,7.96,0.062,0.032,2.34,false)
-    rib.rotation.x=tilt
-  }
-}
+// Interlocking ceramic tile shading is supplied by roofGarage, without
+// the old wide sheet-metal ribs from V20.
+const center=-9.44
+box(seven,roofGarage,center,2.43,6.88,3.19,0.15,4.64).rotation.x=0.045
+box(seven,gutterMetal,center,2.35,9.21,3.17,0.09,0.10)
+for(const z of [4.74,9.04]) box(seven,timber,-10.94,1.17,z,0.135,2.34,0.135)
+box(seven,garageDoor,center,-0.087,6.91,3.15,0.17,4.53,false)
+box(seven,white,center,1.16,4.70,3.08,2.32,0.12)
+
 // Tie the driveway to the outside edge of the curved public sidewalk.
 const garageDriveway = acrossDriveway.map(point => edgePoint(point, -5.1))
 const garageApproach = [-8.15, 8.15].map(x => {
@@ -1066,7 +1149,7 @@ await new GLTFLoader().loadAsync('./assets/models/Haus-Aussenmodell.glb').then((
   })
   anchor.add(model)
   obstacles.push({ group: anchor, minX: 0, maxX: 23.72, minZ: -7.8, maxZ: 0.12 })
-  status.textContent = 'V20 · 200 m · alle bisherigen Bereiche'
+  status.textContent = 'V21 · Referenzabgleich · 200 m'
   document.body.dataset.ready = 'true'
 }).catch(error => {
   console.error(error)
@@ -1109,6 +1192,12 @@ function viewLandmark(x, z) {
   yaw = Math.atan2(-dx, -dz)
   pitch = Math.atan2(2.7 - camera.position.y, Math.hypot(dx, dz))
 }
+function lookTowards(x,z,tx,tz,height=3.9) {
+  camera.position.set(x,1.82,z)
+  const dx=tx-x,dz=tz-z
+  yaw=Math.atan2(-dx,-dz)
+  pitch=Math.atan2(height-1.82,Math.hypot(dx,dz))
+}
 function chooseArea(area) {
   keys.clear()
   switch (area) {
@@ -1116,7 +1205,9 @@ function chooseArea(area) {
     case 'villa': camera.position.set(8.8, 1.86, -3.8); yaw = Math.PI + 0.025; pitch = 0.15; break
     case 'section': camera.position.set(-63.8, 1.78, 5.3); yaw = -Math.PI / 2 - 0.13; pitch = 0.02; break
     case 'junction': camera.position.set(-57.8, 1.82, 7.6); yaw = 3.06; pitch = 0.08; break
-    case 'kiosk': camera.position.set(-52.4, 1.82, 4.85); yaw = Math.PI + 0.30; pitch = 0.14; break
+    case 'kiosk': lookTowards(-64,3,-48,15,4.1); break
+    case 'eight': lookTowards(-17,2,-34,14,3.5); break
+    case 'seven': lookTowards(4,5,-27,-4,4.9); break
     default: if (landmarks[area]) viewLandmark(...landmarks[area]); else reset()
   }
   locationSelect.value = area in landmarks || ['start','villa','section','junction','kiosk'].includes(area) ? area : 'start'
@@ -1154,7 +1245,7 @@ nightButton.addEventListener('click', () => {
   scene.fog.color.set(background)
   skyLight.intensity=night?0.27:2.1
   sun.intensity=night?0.005:2.4
-  asphalt.roughness=night?0.30:0.94
+  asphalt.roughness=night?0.68:0.94
   shopLight.emissiveIntensity=night?1.07:0.75
   lightBox.emissiveIntensity=night?2.1:0.7
   for (const { light, power } of nightLights) light.intensity=night?power:0
