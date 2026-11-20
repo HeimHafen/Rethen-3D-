@@ -1,0 +1,24 @@
+RETHEN – V20 GESAMTPAKET | PRÜFBERICHT
+
+BASIS
+- Originalprojekt Rethen-Peiner-Strasse-V19.zip
+- Bisherige Gebäudemodelle, Straßen und GLB übernommen
+- V19-Korrekturen an Haus 7 unverändert
+
+ZUSAMMENFÜHRUNG
+- Ein index.html / ein world.js / eine gemeinsame Three.js-Szene
+- Zwölf Ansichten über Bereichsauswahl
+- Gleiche Welt, keine separaten Szenen oder Duplikate
+- Keine neu erfundenen Gebäude und keine Verschiebung der früheren Bauwerke
+
+GEPRÜFT
+- Vollständigkeit der Archivdateien und relativen Pfade
+- JavaScript-Syntax
+- GLB-Dateikopf und Dateigröße
+- Bedienoberfläche und definierte Bereichsnamen
+- Keine externe CDN-Abhängigkeit
+
+NOCH OFFEN
+- Live-Sichtprüfung mit iPhone/Safari und GitHub Pages
+- Vermessung der realen Gebäude- und Straßenabstände
+- Detaillierter Abgleich weiterer Fassaden mit den jeweiligen Fotos
